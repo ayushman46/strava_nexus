@@ -50,7 +50,7 @@ const RunDNAModal = ({ activityId, onClose }) => {
               {query.error?.message || 'Try reconnecting Strava, then re-sync.'}
             </p>
             <div className="actions" style={{ marginTop: 14 }}>
-              <a className="button" href="/api/strava-auth">Reconnect Strava</a>
+              <a className="button" href="/api/strava">Reconnect Strava</a>
             </div>
           </div>
         ) : (

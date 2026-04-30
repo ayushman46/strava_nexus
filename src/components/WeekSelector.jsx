@@ -2,72 +2,108 @@ import { useMemo } from 'react'
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
-const formatRangeLabel = (start, end) => {
-  const startLabel = start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-  const endLabel = end.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-  return `${startLabel} → ${endLabel}`
-}
-
-const buildWeekOptions = ({ weeks = 16 }) => {
-  const endBase = new Date()
-  const options = []
-
-  for (let i = 0; i < weeks; i += 1) {
-    const end = new Date(endBase.getTime() - i * 7 * MS_PER_DAY)
-    const start = new Date(end.getTime() - 7 * MS_PER_DAY)
-    const label = i === 0 ? `This week (${formatRangeLabel(start, end)})` : formatRangeLabel(start, end)
-    options.push({
-      value: i === 0 ? '' : end.toISOString(),
-      label,
+const buildCalendarDays = ({ weeks = 4 }) => {
+  const days = []
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  // Create a linear array of days for the heatmap
+  const numDays = weeks * 7
+  for (let i = numDays - 1; i >= 0; i -= 1) {
+    const d = new Date(today.getTime() - i * MS_PER_DAY)
+    days.push({
+      date: d,
+      iso: d.toISOString().split('T')[0],
+      dayOfWeek: d.getDay(),
+      isToday: i === 0,
     })
   }
-
-  return options
+  return days
 }
 
-const WeekSelector = ({ selectedEndIso, onChangeEndIso, weeks = 16 }) => {
-  const options = useMemo(() => buildWeekOptions({ weeks }), [weeks])
+const WeekSelector = ({ selectedEndIso, onChangeEndIso, activities = [], weeks = 4 }) => {
+  const days = useMemo(() => buildCalendarDays({ weeks }), [weeks])
 
-  const selectedValue = selectedEndIso ?? ''
-  const currentIndex = options.findIndex((option) => option.value === selectedValue)
-  const selectedIndex = currentIndex >= 0 ? currentIndex : 0
+  // Map activities to dates for the heatmap
+  const activityMap = useMemo(() => {
+    const map = new Set()
+    activities.forEach((a) => {
+      if (a.start_date) {
+        map.add(new Date(a.start_date).toISOString().split('T')[0])
+      }
+    })
+    return map
+  }, [activities])
 
-  const goPrev = () => {
-    const nextIndex = Math.min(options.length - 1, selectedIndex + 1)
-    onChangeEndIso(options[nextIndex].value || null)
-  }
-
-  const goNext = () => {
-    const nextIndex = Math.max(0, selectedIndex - 1)
-    onChangeEndIso(options[nextIndex].value || null)
-  }
+  // Figure out which week the selected date belongs to (or default to current week)
+  const selectedDate = selectedEndIso ? new Date(selectedEndIso) : new Date()
+  selectedDate.setHours(0, 0, 0, 0)
+  
+  // Calculate the end of the week for the selected date
+  // Calculate the end of the week for the selected date
+  // Assuming week ends on current day of week if no selection, or just block by 7 days.
+  // Actually, to make it simpler, when clicking a day we just set that day as the "end" date.
 
   return (
-    <div className="week-selector">
-      <label className="field-label" htmlFor="weekSelect">Week</label>
-      <div className="week-controls">
-        <button type="button" className="chip-button" onClick={goPrev} disabled={selectedIndex >= options.length - 1}>
-          Prev
-        </button>
-        <select
-          id="weekSelect"
-          className="field-select"
-          value={selectedValue}
-          onChange={(event) => onChangeEndIso(event.target.value || null)}
-        >
-          {options.map((option) => (
-            <option key={option.label} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <button type="button" className="chip-button" onClick={goNext} disabled={selectedIndex <= 0}>
-          Next
-        </button>
+    <div className="calendar-heatmap">
+      <div className="heatmap-header">
+        <label className="field-label">Activity Heatmap</label>
+        <span className="muted" style={{ fontSize: '12px' }}>Click a day to view its week</span>
       </div>
+      <div className="heatmap-grid" style={{ 
+        display: 'grid', 
+        gridTemplateColumns: `repeat(${weeks * 7}, 1fr)`,
+        gap: '4px',
+        marginTop: '8px'
+      }}>
+        {days.map((day) => {
+          const hasActivity = activityMap.has(day.iso)
+          const isSelected = selectedEndIso && day.iso === new Date(selectedEndIso).toISOString().split('T')[0]
+          
+          return (
+            <button
+              key={day.iso}
+              type="button"
+              onClick={() => {
+                // When a day is clicked, we set the end of the week to this day + any remaining days up to the end of the 7-day period.
+                // For simplicity, we can just pass this day as the new "end" date.
+                const newEnd = new Date(day.date)
+                newEnd.setHours(23, 59, 59, 999)
+                onChangeEndIso(newEnd.toISOString())
+              }}
+              title={`${day.date.toLocaleDateString()} ${hasActivity ? '(Ran)' : ''}`}
+              className={`heatmap-day ${hasActivity ? 'active' : ''} ${isSelected ? 'selected' : ''}`}
+              style={{
+                width: '14px',
+                height: '14px',
+                borderRadius: '3px',
+                background: hasActivity 
+                  ? (isSelected ? '#22c55e' : 'rgba(34, 197, 94, 0.5)')
+                  : (isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.05)'),
+                border: isSelected ? '1px solid #fff' : '1px solid transparent',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            />
+          )
+        })}
+      </div>
+      {selectedEndIso && (
+        <div style={{ marginTop: '8px', fontSize: '12px', display: 'flex', justifyContent: 'space-between' }}>
+          <span className="muted">
+            Week ending: <strong style={{ color: '#fff' }}>{new Date(selectedEndIso).toLocaleDateString()}</strong>
+          </span>
+          <button 
+            type="button" 
+            onClick={() => onChangeEndIso(null)}
+            style={{ color: '#a78bfa', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+          >
+            Reset to Today
+          </button>
+        </div>
+      )}
     </div>
   )
 }
 
 export default WeekSelector
-

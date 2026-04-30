@@ -30,7 +30,7 @@ const Dashboard = () => {
   const [compareOpen, setCompareOpen] = useState(false)
   const aiMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/ai-coach', { method: 'POST' })
+      const response = await fetch('/api/ai', { method: 'POST' })
       if (!response.ok) throw new Error('Failed to generate AI advice')
       return response.json()
     },
@@ -105,6 +105,8 @@ const Dashboard = () => {
           <div className="header-actions">
             <WeekSelector
               selectedEndIso={selectedWeekEnd}
+              activities={weekActivities}
+              weeks={12}
               onChangeEndIso={(value) => {
                 setSelectedWeekEnd(value)
                 setCompareIds([])

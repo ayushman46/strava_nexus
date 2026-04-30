@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 
 const fetchInsights = async (activityId) => {
-  const params = new URLSearchParams({ activityId })
-  const response = await fetch(`/api/activity-insights?${params.toString()}`)
+  const params = new URLSearchParams({ action: 'insights', activityId })
+  const response = await fetch(`/api/activities?${params.toString()}`)
   if (!response.ok) {
     let detail = ''
     try {

@@ -1,5 +1,5 @@
-import { getSupabaseAdmin } from './_lib/supabase.js'
 import { parseCookies, verifySession, getCookieName } from './_lib/session.js'
+import { getSupabaseAdmin } from './_lib/supabase.js'
 import { buildRollingWeekTrend, paceMinPerKmFromActivity, sliceByDateRange, summarizeActivities } from './_lib/stats.js'
 
 const clampInt = (value, { min, max, fallback }) => {
@@ -52,22 +52,20 @@ const buildDailyBreakdown = ({ activities, start, days }) => {
   })
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    res.status(405).json({ error: 'Method not allowed' })
-    return
+const handleMe = async (req, res, session, supabase) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, username, avatar_url, strava_athlete_id')
+    .eq('id', session.profileId)
+    .single()
+
+  if (error) {
+    return res.status(500).json({ error: 'Failed to load profile' })
   }
+  return res.status(200).json({ profile: data })
+}
 
-  const cookies = parseCookies(req.headers.cookie)
-  const token = cookies[getCookieName()]
-  const secret = process.env.SESSION_SECRET
-  const session = verifySession(token, secret)
-
-  if (!session) {
-    res.status(401).json({ error: 'Not authenticated' })
-    return
-  }
-
+const handleStats = async (req, res, session, supabase) => {
   const days = clampInt(req.query?.days, { min: 3, max: 30, fallback: 7 })
   const trendWeeks = clampInt(req.query?.weeks, { min: 4, max: 24, fallback: 12 })
 
@@ -79,7 +77,6 @@ export default async function handler(req, res) {
 
   const earliestNeeded = new Date(end.getTime() - (trendWeeks * 7 + days * 2) * 24 * 60 * 60 * 1000)
 
-  const supabase = getSupabaseAdmin()
   const { data, error } = await supabase
     .from('activities')
     .select(
@@ -91,8 +88,7 @@ export default async function handler(req, res) {
     .limit(1000)
 
   if (error) {
-    res.status(500).json({ error: 'Failed to load stats' })
-    return
+    return res.status(500).json({ error: 'Failed to load stats' })
   }
 
   const activities = (data ?? []).map((activity) => ({
@@ -130,7 +126,7 @@ export default async function handler(req, res) {
       pace: paceMinPerKmFromActivity(activity),
     }))
 
-  res.status(200).json({
+  return res.status(200).json({
     range: { start: start.toISOString(), end: end.toISOString(), days },
     current: {
       ...current,
@@ -157,4 +153,28 @@ export default async function handler(req, res) {
     dailyActive,
     activities: weekActivities,
   })
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  const cookies = parseCookies(req.headers.cookie)
+  const token = cookies[getCookieName()]
+  const secret = process.env.SESSION_SECRET
+  const session = verifySession(token, secret)
+
+  if (!session) {
+    return res.status(401).json({ error: 'Not authenticated' })
+  }
+
+  const supabase = getSupabaseAdmin()
+  const action = req.query?.action
+
+  if (action === 'stats') {
+    return handleStats(req, res, session, supabase)
+  }
+
+  return handleMe(req, res, session, supabase)
 }

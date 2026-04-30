@@ -9,7 +9,7 @@ export const buildAuthUrl = () => {
   if (!clientId || !appBaseUrl) {
     throw new Error('Missing STRAVA_CLIENT_ID or APP_BASE_URL')
   }
-  const redirectUri = `${appBaseUrl}/api/strava-callback`
+  const redirectUri = `${appBaseUrl}/api/strava?action=callback`
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,

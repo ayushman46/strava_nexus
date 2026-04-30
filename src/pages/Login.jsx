@@ -7,7 +7,7 @@ const Login = () => (
         <p className="lead">
           Connect Strava, sync runs, earn points, and share leaderboards with your crew.
         </p>
-        <a className="button" href="/api/strava-auth">
+        <a className="button" href="/api/strava">
           Connect Strava
         </a>
       </div>

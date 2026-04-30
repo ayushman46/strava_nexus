@@ -15,7 +15,7 @@ const GroupPage = () => {
     const load = async () => {
       setData((prev) => ({ ...prev, loading: true }))
       try {
-        const response = await fetch(`/api/leaderboard?groupId=${groupId}&range=${range}&mode=${mode}`)
+        const response = await fetch(`/api/groups?action=leaderboard?groupId=${groupId}&range=${range}&mode=${mode}`)
         if (!response.ok) throw new Error('Failed')
         const payload = await response.json()
         if (isMounted) setData({ loading: false, error: null, rows: payload.rows })

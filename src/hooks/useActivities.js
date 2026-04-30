@@ -16,7 +16,7 @@ export const useActivities = () =>
 export const useSyncActivities = () =>
   useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/sync-activities', { method: 'POST' })
+      const response = await fetch('/api/activities?action=sync', { method: 'POST' })
       if (!response.ok) throw new Error('Sync failed')
       return response.json()
     },

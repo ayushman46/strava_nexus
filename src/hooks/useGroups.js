@@ -16,7 +16,7 @@ export const useGroups = () =>
 export const useCreateGroup = () =>
   useMutation({
     mutationFn: async (payload) => {
-      const response = await fetch('/api/create-group', {
+      const response = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -29,7 +29,7 @@ export const useCreateGroup = () =>
 export const useJoinGroup = () =>
   useMutation({
     mutationFn: async (payload) => {
-      const response = await fetch('/api/join-group', {
+      const response = await fetch('/api/groups?action=join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

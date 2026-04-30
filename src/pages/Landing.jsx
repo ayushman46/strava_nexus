@@ -25,7 +25,7 @@ const Landing = () => {
               RunDNA analysis for pacing and heart-rate control.
             </p>
             <div className="actions">
-              <a className="button" href="/api/strava-auth">Connect Strava</a>
+              <a className="button" href="/api/strava">Connect Strava</a>
               <a className="button secondary" href="/dashboard">Open dashboard</a>
             </div>
             <div className="hero-badges">

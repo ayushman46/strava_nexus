@@ -32,7 +32,7 @@ const Navbar = () => {
               {item.label}
             </NavLink>
           ))}
-          <a className="nav-cta" href="/api/strava-auth">Connect</a>
+          <a className="nav-cta" href="/api/strava">Connect</a>
         </nav>
 
         <button
@@ -74,7 +74,7 @@ const Navbar = () => {
           </div>
 
           <div className="nav-mobile-footer">
-            <a className="button" href="/api/strava-auth">Connect Strava</a>
+            <a className="button" href="/api/strava">Connect Strava</a>
           </div>
         </div>
       </div>
