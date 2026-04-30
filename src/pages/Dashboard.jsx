@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { formatPace, formatPaceDelta, secondsToHms } from '../lib/utils'
 import StatCard from '../components/StatCard'
@@ -13,12 +14,20 @@ import { useGroups } from '../hooks/useGroups'
 import { useStats } from '../hooks/useStats'
 import DistanceChart from '../components/charts/DistanceChart'
 import PaceTrendChart from '../components/charts/PaceTrendChart'
+import RunDNAModal from '../components/RunDNAModal'
+import WeekSelector from '../components/WeekSelector'
+import ActiveDaysChart from '../components/charts/ActiveDaysChart'
+import ActivityCompareModal from '../components/ActivityCompareModal'
 
 const Dashboard = () => {
   const activitiesQuery = useActivities()
   const groupsQuery = useGroups()
-  const statsQuery = useStats({ days: 7, weeks: 12 })
+  const [selectedWeekEnd, setSelectedWeekEnd] = useState(null)
+  const statsQuery = useStats({ days: 7, weeks: 12, end: selectedWeekEnd })
   const syncMutation = useSyncActivities()
+  const [runDnaActivityId, setRunDnaActivityId] = useState(null)
+  const [compareIds, setCompareIds] = useState([])
+  const [compareOpen, setCompareOpen] = useState(false)
   const aiMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch('/api/ai-coach', { method: 'POST' })
@@ -54,15 +63,55 @@ const Dashboard = () => {
     return improved ? 'good' : 'bad'
   }
 
+  const activeDays = stats?.dailyActive ?? []
+  const weekActivities = stats?.activities ?? activitiesQuery.data?.activities ?? []
+
+  const toggleCompare = (id, checked) => {
+    setCompareIds((prev) => {
+      const already = prev.includes(id)
+      if (checked && already) return prev
+      if (!checked && !already) return prev
+      if (checked) {
+        if (prev.length >= 3) return prev
+        return [...prev, id]
+      }
+      return prev.filter((value) => value !== id)
+    })
+  }
+
+  const selectedActivities = compareIds
+    .map((id) => weekActivities.find((a) => a.id === id))
+    .filter(Boolean)
+
   return (
     <div className="page">
+      <RunDNAModal activityId={runDnaActivityId} onClose={() => setRunDnaActivityId(null)} />
+      {compareOpen && selectedActivities.length >= 2 ? (
+        <ActivityCompareModal
+          activities={selectedActivities}
+          onClose={() => setCompareOpen(false)}
+          onOpenRunDNA={(id) => {
+            setCompareOpen(false)
+            setRunDnaActivityId(id)
+          }}
+        />
+      ) : null}
       <section className="section">
         <div className="section-header">
           <div>
             <h2>Dashboard</h2>
-            <p className="muted">What you achieved in the last 7 days.</p>
+            <p className="muted">Pick a week, then drill into your runs.</p>
           </div>
-          <SyncButton onSync={() => syncMutation.mutate()} isLoading={syncMutation.isLoading} />
+          <div className="header-actions">
+            <WeekSelector
+              selectedEndIso={selectedWeekEnd}
+              onChangeEndIso={(value) => {
+                setSelectedWeekEnd(value)
+                setCompareIds([])
+              }}
+            />
+            <SyncButton onSync={() => syncMutation.mutate()} isLoading={syncMutation.isLoading} />
+          </div>
         </div>
         <div className="grid stats-grid">
           <StatCard
@@ -102,11 +151,13 @@ const Dashboard = () => {
 
       <section className="section">
         <div className="grid two-col">
-          <AIAdviceCard
-            report={aiMutation.data?.report}
-            onRefresh={() => aiMutation.mutate()}
-            isLoading={aiMutation.isLoading}
-          />
+          <ActiveDaysChart data={activeDays} />
+          <AIAdviceCard report={aiMutation.data?.report} onRefresh={() => aiMutation.mutate()} isLoading={aiMutation.isLoading} />
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="grid two-col">
           <div className="card">
             <h3>Your groups</h3>
             <div className="stack">
@@ -121,18 +172,43 @@ const Dashboard = () => {
               )}
             </div>
           </div>
+          <div className="stack">
+            <DistanceChart data={stats?.trend ?? []} />
+            <PaceTrendChart data={stats?.trend ?? []} />
+          </div>
         </div>
       </section>
 
       <section className="section">
-        <div className="grid two-col">
-          <DistanceChart data={stats?.trend ?? []} />
-          <PaceTrendChart data={stats?.trend ?? []} />
+        <ActivityTable
+          activities={weekActivities}
+          onOpenRunDNA={setRunDnaActivityId}
+          selectedIds={compareIds}
+          onToggleSelect={toggleCompare}
+        />
+        <div className="compare-bar">
+          <div className="muted">
+            Selected: <strong>{compareIds.length}</strong>/3
+          </div>
+          <div className="compare-actions">
+            <button
+              type="button"
+              className="button secondary"
+              onClick={() => setCompareIds([])}
+              disabled={compareIds.length === 0}
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              className="button"
+              onClick={() => setCompareOpen(true)}
+              disabled={selectedActivities.length < 2}
+            >
+              Compare
+            </button>
+          </div>
         </div>
-      </section>
-
-      <section className="section">
-        <ActivityTable activities={activitiesQuery.data?.activities ?? []} />
       </section>
     </div>
   )

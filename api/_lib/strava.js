@@ -1,6 +1,7 @@
 const STRAVA_AUTH_URL = 'https://www.strava.com/oauth/authorize'
 const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token'
 const STRAVA_ACTIVITIES_URL = 'https://www.strava.com/api/v3/athlete/activities'
+const STRAVA_ACTIVITY_STREAMS_URL = 'https://www.strava.com/api/v3/activities'
 
 export const buildAuthUrl = () => {
   const clientId = process.env.STRAVA_CLIENT_ID
@@ -91,4 +92,24 @@ export const fetchActivitiesPaged = async (
   }
 
   return results
+}
+
+export const fetchActivityStreams = async (accessToken, activityId) => {
+  const params = new URLSearchParams({
+    keys: 'time,velocity_smooth,heartrate',
+    key_by_type: 'true',
+  })
+
+  const response = await fetch(`${STRAVA_ACTIVITY_STREAMS_URL}/${String(activityId)}/streams?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+
+  if (!response.ok) {
+    const detail = await response.text()
+    const error = new Error(detail)
+    error.status = response.status
+    throw error
+  }
+
+  return response.json()
 }

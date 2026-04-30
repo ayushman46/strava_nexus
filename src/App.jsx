@@ -11,7 +11,7 @@ function App() {
   return (
     <div className="app-shell">
       <Navbar />
-      <main>
+      <main id="main">
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />

@@ -7,6 +7,7 @@ import ErrorState from '../components/ErrorState'
 const GroupPage = () => {
   const { groupId } = useParams()
   const [range, setRange] = useState('weekly')
+  const [mode, setMode] = useState('classic')
   const [data, setData] = useState({ loading: true, error: null, rows: [] })
 
   useEffect(() => {
@@ -14,7 +15,7 @@ const GroupPage = () => {
     const load = async () => {
       setData((prev) => ({ ...prev, loading: true }))
       try {
-        const response = await fetch(`/api/leaderboard?groupId=${groupId}&range=${range}`)
+        const response = await fetch(`/api/leaderboard?groupId=${groupId}&range=${range}&mode=${mode}`)
         if (!response.ok) throw new Error('Failed')
         const payload = await response.json()
         if (isMounted) setData({ loading: false, error: null, rows: payload.rows })
@@ -26,7 +27,7 @@ const GroupPage = () => {
     return () => {
       isMounted = false
     }
-  }, [groupId, range])
+  }, [groupId, range, mode])
 
   if (data.loading) return <LoadingSpinner />
   if (data.error) return <ErrorState message="Unable to load leaderboard." />
@@ -37,21 +38,42 @@ const GroupPage = () => {
         <div className="section-header">
           <div>
             <h2>Group leaderboard</h2>
-            <p className="muted">Invite teammates using your group code.</p>
+            <p className="muted">
+              Classic ranks by points. FairPlay ranks by improvement vs each runner’s baseline.
+            </p>
           </div>
           <div className="segmented">
             {['weekly', 'monthly', 'all-time'].map((value) => (
               <button
                 key={value}
                 className={range === value ? 'button' : 'button secondary'}
-                onClick={() => setRange(value)}
+                onClick={() => {
+                  setRange(value)
+                  if (value !== 'weekly') setMode('classic')
+                }}
               >
                 {value}
               </button>
             ))}
           </div>
         </div>
-        <LeaderboardTable rows={data.rows} />
+        {range === 'weekly' && (
+          <div className="section-header" style={{ marginTop: 8 }}>
+            <div />
+            <div className="segmented">
+              {['classic', 'fairplay'].map((value) => (
+                <button
+                  key={value}
+                  className={mode === value ? 'button' : 'button secondary'}
+                  onClick={() => setMode(value)}
+                >
+                  {value === 'classic' ? 'Classic' : 'FairPlay'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <LeaderboardTable rows={data.rows} mode={mode} />
       </section>
     </div>
   )

@@ -12,6 +12,7 @@ import joinGroup from '../api/join-group.js'
 import groups from '../api/groups.js'
 import leaderboard from '../api/leaderboard.js'
 import aiCoach from '../api/ai-coach.js'
+import activityInsights from '../api/activity-insights.js'
 
 const app = express()
 const port = process.env.API_PORT || 8787
@@ -25,6 +26,7 @@ app.get('/api/activities', (req, res) => activities(req, res))
 app.get('/api/stats', (req, res) => stats(req, res))
 app.get('/api/groups', (req, res) => groups(req, res))
 app.get('/api/leaderboard', (req, res) => leaderboard(req, res))
+app.get('/api/activity-insights', (req, res) => activityInsights(req, res))
 
 app.post('/api/sync-activities', (req, res) => syncActivities(req, res))
 app.post('/api/refresh-token', (req, res) => refreshToken(req, res))
