@@ -1,6 +1,5 @@
-import { useMemo } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { metersToKm } from '../lib/utils'
+import { formatPace, formatPaceDelta, secondsToHms } from '../lib/utils'
 import StatCard from '../components/StatCard'
 import GroupCard from '../components/GroupCard'
 import ActivityTable from '../components/ActivityTable'
@@ -11,10 +10,14 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorState from '../components/ErrorState'
 import { useActivities, useSyncActivities } from '../hooks/useActivities'
 import { useGroups } from '../hooks/useGroups'
+import { useStats } from '../hooks/useStats'
+import DistanceChart from '../components/charts/DistanceChart'
+import PaceTrendChart from '../components/charts/PaceTrendChart'
 
 const Dashboard = () => {
   const activitiesQuery = useActivities()
   const groupsQuery = useGroups()
+  const statsQuery = useStats({ days: 7, weeks: 12 })
   const syncMutation = useSyncActivities()
   const aiMutation = useMutation({
     mutationFn: async () => {
@@ -24,23 +27,31 @@ const Dashboard = () => {
     },
   })
 
-  const stats = useMemo(() => {
-    const activities = activitiesQuery.data?.activities ?? []
-    const totalDistance = activities.reduce((sum, item) => sum + (item.distance_m || 0), 0)
-    const totalPoints = activities.reduce((sum, item) => sum + (item.total_points || 0), 0)
-    return {
-      totalDistanceKm: metersToKm(totalDistance, 1) ?? 0,
-      totalRuns: activities.length,
-      totalPoints,
-    }
-  }, [activitiesQuery.data])
-
-  if (activitiesQuery.isLoading || groupsQuery.isLoading) {
+  if (activitiesQuery.isLoading || groupsQuery.isLoading || statsQuery.isLoading) {
     return <LoadingSpinner />
   }
 
-  if (activitiesQuery.isError || groupsQuery.isError) {
+  if (activitiesQuery.isError || groupsQuery.isError || statsQuery.isError) {
     return <ErrorState message="We couldn't load your dashboard yet." />
+  }
+
+  const stats = statsQuery.data
+  const current = stats?.current
+  const previous = stats?.previous
+
+  const distanceDelta = Number.isFinite(current?.totalDistanceKm) && Number.isFinite(previous?.totalDistanceKm)
+    ? current.totalDistanceKm - previous.totalDistanceKm
+    : null
+
+  const paceDelta =
+    Number.isFinite(current?.avgPaceMinPerKm) && Number.isFinite(previous?.avgPaceMinPerKm)
+      ? current.avgPaceMinPerKm - previous.avgPaceMinPerKm
+      : null
+
+  const trendTone = (value, { betterWhenLower = false } = {}) => {
+    if (!Number.isFinite(value) || value === 0) return 'neutral'
+    const improved = betterWhenLower ? value < 0 : value > 0
+    return improved ? 'good' : 'bad'
   }
 
   return (
@@ -49,14 +60,43 @@ const Dashboard = () => {
         <div className="section-header">
           <div>
             <h2>Dashboard</h2>
-            <p className="muted">Your latest training snapshot.</p>
+            <p className="muted">What you achieved in the last 7 days.</p>
           </div>
           <SyncButton onSync={() => syncMutation.mutate()} isLoading={syncMutation.isLoading} />
         </div>
         <div className="grid stats-grid">
-          <StatCard label="Total distance" value={`${stats.totalDistanceKm} km`} helper="Last 30 days" />
-          <StatCard label="Runs logged" value={stats.totalRuns} helper="Run count" />
-          <StatCard label="Points" value={stats.totalPoints} helper="All-time" />
+          <StatCard
+            label="Distance"
+            value={`${current?.totalDistanceKm ?? 0} km`}
+            helper="Last 7 days"
+            trend={distanceDelta === null ? null : `vs prev: ${distanceDelta >= 0 ? '+' : ''}${distanceDelta.toFixed(1)} km`}
+            trendTone={trendTone(distanceDelta)}
+          />
+          <StatCard
+            label="Avg pace"
+            value={formatPace(current?.avgPaceMinPerKm)}
+            helper="Distance-weighted"
+            trend={paceDelta === null ? null : `vs prev: ${formatPaceDelta(paceDelta)}`}
+            trendTone={trendTone(paceDelta, { betterWhenLower: true })}
+          />
+          <StatCard
+            label="Time"
+            value={secondsToHms(current?.totalMovingTimeSec) ?? '—'}
+            helper="Moving time"
+          />
+          <StatCard label="Runs" value={current?.totalRuns ?? 0} helper="Last 7 days" />
+          <StatCard
+            label="Elev gain"
+            value={`${Math.round(current?.totalElevationGainM ?? 0)} m`}
+            helper="Total climb"
+          />
+          <StatCard
+            label="Achievements"
+            value={current?.totalAchievements ?? 0}
+            helper="Trophies + PRs"
+          />
+          <StatCard label="Kudos" value={current?.totalKudos ?? 0} helper="From friends" />
+          <StatCard label="Points" value={Math.round(current?.totalPoints ?? 0)} helper="Last 7 days" />
         </div>
       </section>
 
@@ -81,6 +121,13 @@ const Dashboard = () => {
               )}
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="grid two-col">
+          <DistanceChart data={stats?.trend ?? []} />
+          <PaceTrendChart data={stats?.trend ?? []} />
         </div>
       </section>
 

@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from './_lib/supabase.js'
 import { parseCookies, verifySession, getCookieName } from './_lib/session.js'
-import { fetchActivities, refreshToken } from './_lib/strava.js'
+import { fetchActivitiesPaged, refreshToken } from './_lib/strava.js'
 import { calculateActivityPoints } from './_lib/points.js'
 
 const RUN_TYPES = new Set(['Run', 'TrailRun', 'VirtualRun'])
@@ -49,7 +49,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const activities = await fetchActivities(accessToken)
+    const after = Math.floor((Date.now() - 120 * 24 * 60 * 60 * 1000) / 1000)
+    const activities = await fetchActivitiesPaged(accessToken, { after, perPage: 50, maxPages: 6 })
     const runActivities = activities.filter((activity) => RUN_TYPES.has(activity.type))
 
     const rows = runActivities.map((activity) => ({
@@ -93,7 +94,7 @@ export default async function handler(req, res) {
       .upsert(scoreRows, { onConflict: 'activity_id' })
 
     res.status(200).json({ ok: true, imported: runActivities.length })
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to sync activities' })
   }
 }

@@ -28,6 +28,15 @@ export const formatPace = (pace) => {
   return `${minutes}:${String(seconds).padStart(2, '0')} /km`
 }
 
+export const formatPaceDelta = (deltaMinPerKm) => {
+  if (!Number.isFinite(deltaMinPerKm)) return '—'
+  const sign = deltaMinPerKm > 0 ? '+' : deltaMinPerKm < 0 ? '−' : ''
+  const abs = Math.abs(deltaMinPerKm)
+  const minutes = Math.floor(abs)
+  const seconds = Math.round((abs - minutes) * 60)
+  return `${sign}${minutes}:${String(seconds).padStart(2, '0')} /km`
+}
+
 export const formatDate = (value) => {
   if (!value) return '—'
   const date = new Date(value)

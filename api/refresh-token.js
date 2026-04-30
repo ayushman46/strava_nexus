@@ -43,7 +43,7 @@ export default async function handler(req, res) {
       .eq('profile_id', session.profileId)
 
     res.status(200).json({ ok: true })
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Failed to refresh token' })
   }
 }

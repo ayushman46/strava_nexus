@@ -6,6 +6,7 @@ import syncActivities from '../api/sync-activities.js'
 import refreshToken from '../api/refresh-token.js'
 import me from '../api/me.js'
 import activities from '../api/activities.js'
+import stats from '../api/stats.js'
 import createGroup from '../api/create-group.js'
 import joinGroup from '../api/join-group.js'
 import groups from '../api/groups.js'
@@ -21,6 +22,7 @@ app.get('/api/strava-auth', (req, res) => stravaAuth(req, res))
 app.get('/api/strava-callback', (req, res) => stravaCallback(req, res))
 app.get('/api/me', (req, res) => me(req, res))
 app.get('/api/activities', (req, res) => activities(req, res))
+app.get('/api/stats', (req, res) => stats(req, res))
 app.get('/api/groups', (req, res) => groups(req, res))
 app.get('/api/leaderboard', (req, res) => leaderboard(req, res))
 

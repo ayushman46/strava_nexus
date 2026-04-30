@@ -56,12 +56,39 @@ export const refreshToken = async (refreshTokenValue) => {
 }
 
 export const fetchActivities = async (accessToken) => {
-  const response = await fetch(`${STRAVA_ACTIVITIES_URL}?per_page=50`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
-  if (!response.ok) {
-    const detail = await response.text()
-    throw new Error(detail)
+  return fetchActivitiesPaged(accessToken, { perPage: 50, maxPages: 1 })
+}
+
+export const fetchActivitiesPaged = async (
+  accessToken,
+  { perPage = 50, page = 1, after, before, maxPages = 5 } = {},
+) => {
+  const results = []
+  let currentPage = page
+
+  while (currentPage <= maxPages) {
+    const params = new URLSearchParams({
+      per_page: String(perPage),
+      page: String(currentPage),
+    })
+    if (Number.isFinite(after)) params.set('after', String(after))
+    if (Number.isFinite(before)) params.set('before', String(before))
+
+    const response = await fetch(`${STRAVA_ACTIVITIES_URL}?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    if (!response.ok) {
+      const detail = await response.text()
+      throw new Error(detail)
+    }
+
+    const pageData = await response.json()
+    if (!Array.isArray(pageData) || pageData.length === 0) break
+    results.push(...pageData)
+
+    if (pageData.length < perPage) break
+    currentPage += 1
   }
-  return response.json()
+
+  return results
 }
