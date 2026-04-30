@@ -1,15 +1,15 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 
-const fetchActivities = async () => {
-  const response = await fetch('/api/activities?limit=25')
+const fetchActivities = async ({ limit = 25 } = {}) => {
+  const response = await fetch(`/api/activities?limit=${limit}`)
   if (!response.ok) throw new Error('Failed to load activities')
   return response.json()
 }
 
-export const useActivities = () =>
+export const useActivities = ({ limit = 25 } = {}) =>
   useQuery({
-    queryKey: ['activities'],
-    queryFn: fetchActivities,
+    queryKey: ['activities', limit],
+    queryFn: () => fetchActivities({ limit }),
     staleTime: 1000 * 30,
   })
 

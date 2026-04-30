@@ -55,11 +55,11 @@ const classifyRun = ({ avgPaceMinPerKm, avgHr, paceStd }) => {
 }
 
 const handleGetActivities = async (req, res, session, supabase) => {
-  const limit = Math.max(1, Math.min(50, Number.parseInt(String(req.query?.limit ?? '20'), 10) || 20))
+  const limit = Math.max(1, Math.min(200, Number.parseInt(String(req.query?.limit ?? '20'), 10) || 20))
   const { data, error } = await supabase
     .from('activities')
     .select(
-      'id, name, start_date, distance_m, moving_time_sec, average_speed, total_elevation_gain, kudos_count, achievement_count, average_heartrate, activity_scores(total_points)',
+      'id, name, start_date, distance_m, moving_time_sec, elapsed_time_sec, average_speed, total_elevation_gain, kudos_count, achievement_count, average_heartrate, activity_scores(total_points)',
     )
     .eq('profile_id', session.profileId)
     .order('start_date', { ascending: false })
@@ -260,8 +260,8 @@ const handleSyncActivities = async (req, res, session, supabase) => {
   }
 
   try {
-    const after = Math.floor((Date.now() - 120 * 24 * 60 * 60 * 1000) / 1000)
-    const activities = await fetchActivitiesPaged(accessToken, { after, perPage: 50, maxPages: 6 })
+    const after = Math.floor((Date.now() - 3650 * 24 * 60 * 60 * 1000) / 1000) // 10 years
+    const activities = await fetchActivitiesPaged(accessToken, { after, perPage: 50, maxPages: 10 })
     const runActivities = activities.filter((activity) => RUN_TYPES.has(activity.type))
 
     const rows = runActivities.map((activity) => ({

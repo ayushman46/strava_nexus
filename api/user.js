@@ -80,7 +80,7 @@ const handleStats = async (req, res, session, supabase) => {
   const { data, error } = await supabase
     .from('activities')
     .select(
-      'id, name, type, start_date, distance_m, moving_time_sec, total_elevation_gain, kudos_count, achievement_count, average_heartrate, average_speed, activity_scores(total_points)',
+      'id, name, type, start_date, distance_m, moving_time_sec, elapsed_time_sec, total_elevation_gain, kudos_count, achievement_count, average_heartrate, average_speed, activity_scores(total_points)',
     )
     .eq('profile_id', session.profileId)
     .gte('start_date', earliestNeeded.toISOString())
@@ -117,6 +117,7 @@ const handleStats = async (req, res, session, supabase) => {
       start_date: activity.start_date,
       distance_m: activity.distance_m,
       moving_time_sec: activity.moving_time_sec,
+      elapsed_time_sec: activity.elapsed_time_sec,
       total_elevation_gain: activity.total_elevation_gain,
       kudos_count: activity.kudos_count,
       achievement_count: activity.achievement_count,
@@ -125,6 +126,13 @@ const handleStats = async (req, res, session, supabase) => {
       total_points: activity.total_points ?? 0,
       pace: paceMinPerKmFromActivity(activity),
     }))
+
+  const { data: allActivitiesData, error: allTimeError } = await supabase
+    .from('activities')
+    .select('id, distance_m, moving_time_sec, elapsed_time_sec, total_elevation_gain, average_speed, average_heartrate, activity_scores(total_points), kudos_count, achievement_count')
+    .eq('profile_id', session.profileId)
+
+  const allTime = !allTimeError ? summarizeActivities(allActivitiesData ?? []) : null
 
   return res.status(200).json({
     range: { start: start.toISOString(), end: end.toISOString(), days },
@@ -148,6 +156,16 @@ const handleStats = async (req, res, session, supabase) => {
         : null,
       avgHeartRate: previous.avgHeartRate ? Number(previous.avgHeartRate.toFixed(0)) : null,
     },
+    allTime: allTime ? {
+      ...allTime,
+      totalDistanceKm: Number((allTime.totalDistanceM / 1000).toFixed(1)),
+      longestRunKm: Number((allTime.longestRunM / 1000).toFixed(1)),
+      avgPaceMinPerKm: allTime.avgPaceMinPerKm ? Number(allTime.avgPaceMinPerKm.toFixed(2)) : null,
+      fastestPaceMinPerKm: allTime.fastestPaceMinPerKm
+        ? Number(allTime.fastestPaceMinPerKm.toFixed(2))
+        : null,
+      avgHeartRate: allTime.avgHeartRate ? Number(allTime.avgHeartRate.toFixed(0)) : null,
+    } : null,
     trend,
     daily,
     dailyActive,

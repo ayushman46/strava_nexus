@@ -5,7 +5,7 @@ const buildNavItems = () => [
   { to: '/', label: 'Home' },
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/groups/preview', label: 'Group' },
-  { to: '/compare/preview', label: 'Compare' },
+  { to: '/compare', label: 'Compare' },
   { to: '/profile', label: 'Profile' },
 ]
 

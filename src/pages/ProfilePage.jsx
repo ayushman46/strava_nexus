@@ -35,51 +35,30 @@ const ProfilePage = () => {
         </div>
 
         <div className="section-head">
-          <h3>Your Cumulative Stats</h3>
-          <p className="muted">Across all synchronized activities in the last 30 days.</p>
+          <h3>Last 30 Days</h3>
+          <p className="muted">Recent activities snapshot.</p>
+        </div>
+        <div className="grid stats-grid" style={{ marginBottom: '40px' }}>
+          <StatCard label="Total Distance" value={`${current?.totalDistanceKm ?? 0} km`} />
+          <StatCard label="Total Runs" value={current?.totalRuns ?? 0} />
+          <StatCard label="Avg Pace" value={formatPace(current?.avgPaceMinPerKm)} />
+          <StatCard label="Total Time" value={secondsToHms(current?.totalElapsedTimeSec) ?? '0m'} helper="Elapsed time" />
         </div>
 
+        <div className="section-head">
+          <h3>All-Time Records</h3>
+          <p className="muted">Across all your synchronized Strava history.</p>
+        </div>
         <div className="grid stats-grid">
-          <StatCard 
-            label="Total Distance" 
-            value={`${current?.totalDistanceKm ?? 0} km`} 
-            helper="Last 30 days" 
-          />
-          <StatCard 
-            label="Total Runs" 
-            value={current?.totalRuns ?? 0} 
-            helper="Last 30 days" 
-          />
-          <StatCard 
-            label="Avg Pace" 
-            value={formatPace(current?.avgPaceMinPerKm)} 
-            helper="Overall average" 
-          />
-          <StatCard 
-            label="Fastest Pace" 
-            value={formatPace(current?.fastestPaceMinPerKm)} 
-            helper="Best run pace" 
-          />
-          <StatCard 
-            label="Longest Run" 
-            value={`${current?.longestRunKm ?? 0} km`} 
-            helper="Max distance" 
-          />
-          <StatCard 
-            label="Total Time" 
-            value={secondsToHms(current?.totalMovingTimeSec) ?? '0m'} 
-            helper="Moving time" 
-          />
-          <StatCard 
-            label="Total Elevation" 
-            value={`${Math.round(current?.totalElevationGainM ?? 0)} m`} 
-            helper="Climb" 
-          />
-          <StatCard 
-            label="Total Points" 
-            value={Math.round(current?.totalPoints ?? 0)} 
-            helper="Scored points" 
-          />
+          <StatCard label="Total Time" value={secondsToHms(stats?.allTime?.totalElapsedTimeSec) ?? '0m'} helper="Elapsed time" />
+          <StatCard label="Total Distance" value={`${stats?.allTime?.totalDistanceKm ?? 0} km`} helper="Lifetime" />
+          <StatCard label="Total Runs" value={stats?.allTime?.totalRuns ?? 0} helper="Lifetime" />
+          <StatCard label="Avg Pace" value={formatPace(stats?.allTime?.avgPaceMinPerKm)} helper="Overall average" />
+          <StatCard label="Fastest Pace" value={formatPace(stats?.allTime?.fastestPaceMinPerKm)} helper="Best run pace" />
+          <StatCard label="Longest Run" value={`${stats?.allTime?.longestRunKm ?? 0} km`} helper="Max distance" />
+          <StatCard label="Total Elevation" value={`${Math.round(stats?.allTime?.totalElevationGainM ?? 0)} m`} helper="Climb" />
+          <StatCard label="Total Points" value={Math.round(stats?.allTime?.totalPoints ?? 0)} helper="Scored points" />
+          <StatCard label="Total Kudos" value={Math.round(stats?.allTime?.totalKudos ?? 0)} helper="Received" />
         </div>
       </section>
     </div>

@@ -20,6 +20,7 @@ export const summarizeActivities = (activities) => {
     totalRuns: 0,
     totalDistanceM: 0,
     totalMovingTimeSec: 0,
+    totalElapsedTimeSec: 0,
     totalElevationGainM: 0,
     totalKudos: 0,
     totalAchievements: 0,
@@ -36,6 +37,7 @@ export const summarizeActivities = (activities) => {
   for (const activity of activities) {
     const distance = Number(activity?.distance_m ?? 0)
     const movingTime = Number(activity?.moving_time_sec ?? 0)
+    const elapsedTime = Number(activity?.elapsed_time_sec ?? movingTime)
     const elevation = Number(activity?.total_elevation_gain ?? 0)
     const kudos = Number(activity?.kudos_count ?? 0)
     const achievements = Number(activity?.achievement_count ?? 0)
@@ -47,6 +49,7 @@ export const summarizeActivities = (activities) => {
       if (distance > totals.longestRunM) totals.longestRunM = distance
     }
     if (Number.isFinite(movingTime)) totals.totalMovingTimeSec += movingTime
+    if (Number.isFinite(elapsedTime)) totals.totalElapsedTimeSec += elapsedTime
     if (Number.isFinite(elevation)) totals.totalElevationGainM += elevation
     if (Number.isFinite(kudos)) totals.totalKudos += kudos
     if (Number.isFinite(achievements)) totals.totalAchievements += achievements

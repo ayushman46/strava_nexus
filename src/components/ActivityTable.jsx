@@ -57,7 +57,7 @@ const ActivityTable = ({
                 <td>{formatDate(activity.start_date)}</td>
                 <td className="hide-sm">{activity.name || 'Run'}</td>
                 <td>{metersToKm(activity.distance_m)} km</td>
-                <td className="hide-sm">{secondsToHms(activity.moving_time_sec) ?? '—'}</td>
+                <td className="hide-sm">{secondsToHms(activity.elapsed_time_sec || activity.moving_time_sec) ?? '—'}</td>
                 <td>{formatPace(activity.pace)}</td>
                 <td className="hide-sm">{Math.round(activity.total_elevation_gain ?? 0)} m</td>
                 <td className="hide-sm">{activity.kudos_count ?? 0}</td>

@@ -65,7 +65,7 @@ const RunDNAModal = ({ activityId, onClose }) => {
                     <div className="run-name">{activity?.name || 'Run'}</div>
                     <div className="muted">
                       {formatDate(activity?.start_date)} · {metersToKm(activity?.distance_m)} km ·{' '}
-                      {secondsToHms(activity?.moving_time_sec) ?? '—'}
+                      {secondsToHms(activity?.elapsed_time_sec || activity?.moving_time_sec) ?? '—'}
                     </div>
                   </div>
                   <div className="run-type">

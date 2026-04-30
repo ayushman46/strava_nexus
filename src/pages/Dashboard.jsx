@@ -15,7 +15,7 @@ import { useStats } from '../hooks/useStats'
 import DistanceChart from '../components/charts/DistanceChart'
 import PaceTrendChart from '../components/charts/PaceTrendChart'
 import RunDNAModal from '../components/RunDNAModal'
-import WeekSelector from '../components/WeekSelector'
+import MonthCalendar from '../components/MonthCalendar'
 import ActiveDaysChart from '../components/charts/ActiveDaysChart'
 import ActivityCompareModal from '../components/ActivityCompareModal'
 
@@ -103,18 +103,31 @@ const Dashboard = () => {
             <p className="muted">Pick a week, then drill into your runs.</p>
           </div>
           <div className="header-actions">
-            <WeekSelector
-              selectedEndIso={selectedWeekEnd}
-              activities={weekActivities}
-              weeks={12}
-              onChangeEndIso={(value) => {
-                setSelectedWeekEnd(value)
-                setCompareIds([])
-              }}
-            />
             <SyncButton onSync={() => syncMutation.mutate()} isLoading={syncMutation.isLoading} />
           </div>
         </div>
+
+        <div style={{ marginBottom: '24px' }}>
+          <div className="card glass">
+            <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, letterSpacing: '-0.02em' }}>Activity Calendar</h3>
+              <p className="muted" style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>Select a day to lock the dashboard to that week.</p>
+            </div>
+            <MonthCalendar
+              activities={activitiesQuery.data?.activities ?? []}
+              onSelectDate={(date) => {
+                const day = date.getDay()
+                const diff = day === 0 ? 0 : 7 - day
+                const endOfWeek = new Date(date)
+                endOfWeek.setDate(endOfWeek.getDate() + diff)
+                endOfWeek.setHours(23, 59, 59, 999)
+                setSelectedWeekEnd(endOfWeek.toISOString())
+                setCompareIds([])
+              }}
+            />
+          </div>
+        </div>
+
         <div className="grid stats-grid">
           <StatCard
             label="Distance"
@@ -132,8 +145,8 @@ const Dashboard = () => {
           />
           <StatCard
             label="Time"
-            value={secondsToHms(current?.totalMovingTimeSec) ?? '—'}
-            helper="Moving time"
+            value={secondsToHms(current?.totalElapsedTimeSec) ?? '—'}
+            helper="Elapsed time"
           />
           <StatCard label="Runs" value={current?.totalRuns ?? 0} helper="Last 7 days" />
           <StatCard

@@ -18,6 +18,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/groups/:groupId" element={<GroupPage />} />
           <Route path="/compare/:groupId" element={<ComparePage />} />
+          <Route path="/compare" element={<ComparePage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </main>

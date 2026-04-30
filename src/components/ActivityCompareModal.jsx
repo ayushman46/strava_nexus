@@ -49,8 +49,8 @@ const computeAIScore = (activities) => {
       format: (v) => `${Math.round(v)} pts`,
     },
     {
-      key: 'moving_time_sec',
-      label: 'Longer effort duration',
+      key: 'elapsed_time_sec',
+      label: 'Longer elapsed duration',
       lowerIsBetter: false,
       format: (v) => secondsToHms(v),
     },
@@ -76,7 +76,8 @@ const computeAIScore = (activities) => {
 
   for (const check of checks) {
     const values = activities.map((a) => {
-      const v = a?.[check.key]
+      let v = a?.[check.key]
+      if (check.key === 'elapsed_time_sec' && !v) v = a?.moving_time_sec
       return typeof v === 'number' && Number.isFinite(v) ? v : null
     })
     const winner = getWinner(values, { lowerIsBetter: check.lowerIsBetter })
