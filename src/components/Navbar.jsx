@@ -74,7 +74,7 @@ const Navbar = () => {
           </div>
 
           <div className="nav-mobile-footer">
-            <a className="button" href="/api/strava">Connect Strava</a>
+            <a className="button" href="/api/strava">Connect with Strava</a>
           </div>
         </div>
       </div>

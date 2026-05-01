@@ -18,14 +18,14 @@ const Landing = () => {
           <div className="hero-copy">
             <p className="eyebrow">Run. Rival. Repeat.</p>
             <h1>
-              The <span className="text-grad">sporty</span> Strava dashboard your crew will actually open.
+              The <span className="text-grad">sporty</span> running dashboard your crew will actually open.
             </h1>
             <p className="lead">
               StrideCircle turns your runs into weekly recaps, points, and truly useful coaching — with
               RunDNA analysis for pacing and heart-rate control.
             </p>
             <div className="actions">
-              <a className="button" href="/api/strava">Connect Strava</a>
+              <a className="button" href="/api/strava">Connect with Strava</a>
               <a className="button secondary" href="/dashboard">Open dashboard</a>
             </div>
             <div className="hero-badges">
@@ -86,7 +86,7 @@ const Landing = () => {
 
       <footer className="section footer">
         <div className="footer-inner">
-          <p className="muted">© {new Date().getFullYear()} StrideCircle</p>
+          <p className="muted">© {new Date().getFullYear()} StrideCircle · Powered by Strava</p>
           <div className="footer-links">
             <a href="/dashboard">Dashboard</a>
             <a href="/profile">Profile</a>
