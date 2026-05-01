@@ -29,6 +29,7 @@ export const exchangeToken = async (code) => {
       client_secret: process.env.STRAVA_CLIENT_SECRET,
       code,
       grant_type: 'authorization_code',
+      redirect_uri: `${process.env.APP_BASE_URL}/api/strava?action=callback`,
     }),
   })
   if (!response.ok) {
