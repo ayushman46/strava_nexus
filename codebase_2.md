@@ -1,4 +1,4 @@
-# 🏃‍♂️ StrideCircle: A Beginner's Guide to the Codebase
+#  StrideCircle: A Beginner's Guide to the Codebase
 
 Welcome to StrideCircle! If this is your first time looking at a full-stack web application, it can feel a bit overwhelming. This guide is written specifically for you. It breaks down exactly how this app was built, how the different pieces talk to each other, and where to find everything.
 
